@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🥊 FIGHTING STICK: RED SKILLED AI 🥊 | Arcade Duel</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Courier New', 'Press Start 2P', 'Courier', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: #000000aa;
+            border-radius: 64px;
+            padding: 20px 30px 30px 30px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 28px;
+            box-shadow: 0 0 0 4px #ffd966, 0 0 0 8px #2a1e0e, 0 20px 30px black;
+            cursor: none;
+            background: #2b2b2b;
+        }
+
+        .info-panel {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: #1e1a2fcc;
+            backdrop-filter: blur(8px);
+            padding: 12px 28px;
+            border-radius: 60px;
+            border: 1px solid #ffd96677;
+        }
+
+        .health-bars {
+            flex: 2;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .health-item {
+            flex: 1;
+        }
+
+        .health-label {
+            font-weight: bold;
+            color: #f9e0a0;
+            text-shadow: 0 2px 0 #4a2a00;
+            letter-spacing: 1px;
+            font-size: 1rem;
+        }
+
+        .health-bg {
+            background: #3a1f1f;
+            border-radius: 40px;
+            height: 22px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px #00000066;
+            margin-top: 4px;
+        }
+
+        .health-fill {
+            width: 100%;
+            height: 100%;
+            background: #e34d4d;
+            background: linear-gradient(90deg, #ff5e5e, #c02222);
+            border-radius: 40px;
+            transition: width 0.1s ease-out;
+        }
+
+        .vs-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: radial-gradient(circle, #ffb347, #ff7700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 6px #ffaa33;
+            font-family: monospace;
+        }
+
+        .controls {
+            display: flex;
+            gap: 28px;
+            background: #00000099;
+            padding: 8px 24px;
+            border-radius: 48px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .key {
+            background: #2c2e3e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #ffd966;
+            font-family: monospace;
+            font-weight: bold;
+            box-shadow: inset 0 -2px 0 #0a0a1a, 0 2px 6px black;
+        }
+
+        button {
+            background: #f0a34b;
+            border: none;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 6px 18px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: 0.1s linear;
+            box-shadow: 0 4px 0 #6a2e00;
+            color: #1e1a1a;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #6a2e00;
+        }
+
+        .status {
+            background: #000000aa;
+            padding: 8px 18px;
+            border-radius: 32px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #ffecb3;
+            text-align: center;
+            min-width: 160px;
+        }
+
+        .ai-badge {
+            background: #d42e12cc;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: gold;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 780px) {
+            .info-panel { flex-direction: column; align-items: stretch; }
+            .controls { justify-content: center; }
+            .key { font-size: 0.7rem; padding: 4px 10px; }
+            .health-label { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="1000" height="500" style="width:100%; height:auto; max-width:1000px; aspect-ratio:1000/500"></canvas>
+
+        <div class="info-panel">
+            <div class="health-bars">
+                <div class="health-item">
+                    <div class="health-label">🥊 RED STICK <span class="ai-badge">🔥 SKILLED AI 🔥</span></div>
+                    <div class="health-bg"><div id="healthP1Fill" class="health-fill" style="width: 100%"></div></div>
+                </div>
+                <div class="vs-text">⚔️ VS ⚔️</div>
+                <div class="health-item">
+                    <div class="health-label">🔵 BLUE STICK (YOU)</div>
+                    <div class="health-bg"><div id="healthP2Fill" class="health-fill" style="width: 100%"></div></div>
+                </div>
+            </div>
+            <div class="controls">
+                <span class="key">🡄 🡅 🡆</span> <span style="color:#ffae70">MOVE / JUMP</span>
+                <span class="key">[ Z ]</span> <span style="color:#ffae70">PUNCH</span>
+                <span class="key">[ X ]</span> <span style="color:#ffae70">KICK</span>
+            </div>
+            <button id="resetBtn">⚡ RESTART DUEL ⚡</button>
+        </div>
+        <div class="status" id="gameStatusText">🤖 RED AI IS READY TO FIGHT! 🤖</div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ---------- CANVAS ----------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ---------- GAME DIMENSIONS ----------
+        const GROUND_Y = 400;
+        const CANVAS_W = 1000;
+        const CANVAS_H = 500;
+
+        const BASE_WIDTH = 42;
+        const BASE_HEIGHT = 82;
+
+        // ----- FIGHTERS: P1 = RED (AI controlled), P2 = BLUE (player) -----
+        let p1 = {
+            x: 150,
+            y: GROUND_Y - BASE_HEIGHT,
+            width: BASE_WIDTH,
+            height: BASE_HEIGHT,
+            health: 100,
+            maxHealth: 100,
+            side: 'left',
+            isAttacking: false,
+            attackTimer: 0,
+            attackType: null,
+            hitActive: false,
+            hitDamage: 0,
+            hitRange: 56,
+            color: "#e34234",
+            darkColor: "#a12218",
+            invincibleTimer: 0,
+            blockStun: 0,
+            velocityY: 0,
+            isGrounded: true,
+            facingRight: true,
+            // AI memory
+            aiCooldown: 0,
+            aiDecisionDelay: 0,
+            lastDistance: 0
+        };
+
+        let p2 = {
+            x: CANVAS_W - 180,
+            y: GROUND_Y - BASE_HEIGHT,
+            width: BASE_WIDTH,
+            height: BASE_HEIGHT,
+            health: 100,
+            maxHealth: 100,
+            side: 'right',
+            isAttacking: false,
+            attackTimer: 0,
+            attackType: null,
+            hitActive: false,
+            hitDamage: 0,
+            hitRange: 56,
+            color: "#4c8bff",
+            darkColor: "#1f509e",
+            invincibleTimer: 0,
+            blockStun: 0,
+            velocityY: 0,
+            isGrounded: true,
+            facingRight: false,
+        };
+
+        // game state
+        let gameActive = true;
+        let winner = null;
+        let announceTimer = 0;
+        let message = "⚡ RED AI CHALLENGES YOU! ⚡";
+
+        // helper functions
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        // ----- SMART AI FOR RED (P1) -----
+        // AI will: approach, keep optimal range, attack when possible, jump occasionally, defend?
+        function updateAIPlayer() {
+            if (!gameActive) return;
+            if (winner !== null) return;
+            if (p1.blockStun > 0) return; // stunned, can't act
+            
+            const distance = Math.abs(p1.x - p2.x);
+            const attackRangePunch = 62;
+            const attackRangeKick = 70;
+            const idealRange = 75;
+            
+            // DECREMENT AI timers
+            if (p1.aiCooldown > 0) p1.aiCooldown--;
+            if (p1.aiDecisionDelay > 0) p1.aiDecisionDelay--;
+            
+            // AI DECISION every ~12 frames for responsiveness (smooth but not frame-perfect)
+            if (p1.aiDecisionDelay <= 0) {
+                p1.aiDecisionDelay = 10; 
+                
+                // 1. ATTACK OPPORTUNITY: if in range and not attacking and not in blockstun
+                const canAttackNow = (!p1.isAttacking && p1.aiCooldown <= 0 && p1.blockStun === 0);
+                const facingEnemy = (p2.x > p1.x) ? true : false;
+                // adjust facing
+                if (p2.x > p1.x) p1.facingRight = true;
+                else p1.facingRight = false;
+                
+                if (canAttackNow && distance < attackRangeKick + 10) {
+                    // skilled mix: if very close -> kick (more dmg), else punch
+                    let useKick = (distance < 55) || (Math.random() < 0.45);
+                    if (useKick) {
+                        startAttack(p1, p2, 'kick');
+                        p1.aiCooldown = 18;
+                    } else {
+                        startAttack(p1, p2, 'punch');
+                        p1.aiCooldown = 14;
+                    }
+                    message = "🔥 RED AI STRIKES! 🔥";
+                    announceTimer = 12;
+                    return;
+                }
+                
+                // 2. MOVEMENT: approach or retreat for spacing (skilled positioning)
+                let moveDirection = 0;
+                if (distance > idealRange + 12) {
+                    // approach enemy
+                    moveDirection = (p2.x > p1.x) ? 1 : -1;
+                } else if (distance < idealRange - 25 && distance > 30) {
+                    // too close, back off slightly (smart footwork)
+                    moveDirection = (p2.x > p1.x) ? -1 : 1;
+                } else {
+                    // random step / feint sometimes
+                    if (Math.random() < 0.2) {
+                        moveDirection = (Math.random() < 0.5) ? -1 : 1;
+                    }
+                }
+                
+                if (moveDirection !== 0) {
+                    let speed = 4.5;
+                    p1.x += moveDirection * speed;
+                    p1.x = clamp(p1.x, 35, CANVAS_W - p1.width - 35);
+                    // update facing after movement
+                    if (moveDirection > 0) p1.facingRight = true;
+                    if (moveDirection < 0) p1.facingRight = false;
+                }
+                
+                // 3. JUMP logic: AI jumps to avoid or gain advantage (skilled)
+                const shouldJump = (p1.isGrounded && p1.velocityY === 0 && !p1.isAttacking && p1.blockStun === 0);
+                if (shouldJump) {
+                    // jump if enemy is attacking OR to approach unpredictably
+                    const enemyAttacking = p2.isAttacking;
+                    const randomJump = Math.random() < 0.12;
+                    if (enemyAttacking || (distance < 70 && randomJump)) {
+                        p1.velocityY = -11.5;
+                        p1.isGrounded = false;
+                        message = "🤖 RED LEAPS! 🤖";
+                        announceTimer = 8;
+                    }
+                }
+                
+                // 4. ADVANCED: AI attempts to counter? if player attacks and red in range but not stunned, sometimes interrupt
+                if (p2.isAttacking && p2.hitActive && distance < 70 && !p1.isAttacking && p1.aiCooldown <= 5 && p1.blockStun === 0 && gameActive) {
+                    // skilled counter attack!
+                    if (Math.random() < 0.55) {
+                        startAttack(p1, p2, 'punch');
+                        p1.aiCooldown = 12;
+                        message = "⚡ RED COUNTERS! ⚡";
+                        announceTimer = 15;
+                    }
+                }
+            }
+        }
+        
+        // ----- core game mechanics (movement, attacks, physics)-----
+        function applyMovementAndBounds(fighter, isPlayer) {
+            let moveSpeed = 5.2;
+            if(!gameActive) moveSpeed = 0;
+            
+            const GRAVITY = 0.82;
+            const JUMP_POWER = -11.8;
+            
+            let canMove = gameActive && fighter.blockStun <= 0 && winner === null;
+            
+            if(isPlayer && canMove) {
+                // Player 2 controls (blue)
+                if(keys.ArrowLeft) {
+                    fighter.x -= moveSpeed;
+                    fighter.facingRight = false;
+                }
+                if(keys.ArrowRight) {
+                    fighter.x += moveSpeed;
+                    fighter.facingRight = true;
+                }
+                if(keys.ArrowUp && fighter.isGrounded && fighter.velocityY === 0 && !fighter.isAttacking && gameActive) {
+                    fighter.velocityY = JUMP_POWER;
+                    fighter.isGrounded = false;
+                }
+            }
+            
+            // AI movement already handled separately but we also apply gravity & bounds for both
+            fighter.velocityY += GRAVITY;
+            fighter.y += fighter.velocityY;
+            
+            const floorY = GROUND_Y - fighter.height;
+            if(fighter.y >= floorY) {
+                fighter.y = floorY;
+                fighter.velocityY = 0;
+                fighter.isGrounded = true;
+            } else {
+                fighter.isGrounded = false;
+            }
+            
+            // boundary clamp (no wall escape)
+            fighter.x = clamp(fighter.x, 35, CANVAS_W - fighter.width - 35);
+        }
+        
+        function startAttack(attacker, defender, attackType) {
+            if(!gameActive) return false;
+            if(attacker.blockStun > 0) return false;
+            if(attacker.isAttacking) return false;
+            
+            let damage = attackType === 'punch' ? 9 : 14;
+            let range = attackType === 'punch' ? 58 : 68;
+            
+            attacker.isAttacking = true;
+            attacker.attackTimer = 13;
+            attacker.attackType = attackType;
+            attacker.hitActive = true;
+            attacker.hitDamage = damage;
+            attacker.hitRange = range;
+            attacker.hitActiveFramesLeft = 6;
+            return true;
+        }
+        
+        function updateAttacks() {
+            if(!gameActive) return;
+            updateFighterAttack(p1, p2);
+            updateFighterAttack(p2, p1);
+        }
+        
+        function updateFighterAttack(attacker, defender) {
+            if(attacker.isAttacking) {
+                if(attacker.attackTimer > 0) {
+                    attacker.attackTimer--;
+                    if(attacker.attackTimer >= 7) {
+                        attacker.hitActive = true;
+                    } else {
+                        attacker.hitActive = false;
+                    }
+                    
+                    if(attacker.hitActive && defender.invincibleTimer <= 0 && gameActive && winner === null) {
+                        let dx = Math.abs(attacker.x - defender.x);
+                        let attackerFacingRight = attacker.facingRight;
+                        let defenderIsRightSide = (defender.x > attacker.x);
+                        let correctFacing = (attackerFacingRight && defenderIsRightSide) || (!attackerFacingRight && !defenderIsRightSide);
+                        
+                        if(dx < attacker.hitRange && correctFacing) {
+                            let finalDamage = attacker.hitDamage;
+                            defender.health = Math.max(0, defender.health - finalDamage);
+                            defender.invincibleTimer = 14;
+                            defender.blockStun = 9;
+                            defender.isAttacking = false;
+                            defender.attackTimer = 0;
+                            defender.hitActive = false;
+                            
+                            let knockDir = (defender.x - attacker.x) > 0 ? 1 : -1;
+                            defender.x += knockDir * 20;
+                            defender.x = clamp(defender.x, 35, CANVAS_W - defender.width - 35);
+                            
+                            // announce hit based on attacker
+                            if(attacker.side === 'left') {
+                                message = "💢 RED AI LANDS BRUTAL HIT! 💢";
+                            } else {
+                                message = "💥 YOU HIT THE AI! 💥";
+                            }
+                            announceTimer = 18;
+                            attacker.hitActive = false;
+                            
+                            if(defender.health <= 0) {
+                                gameActive = false;
+                                winner = attacker.side === 'left' ? 'p1' : 'p2';
+                                if(winner === 'p1') message = "🏆 RED AI VICTORY! 🏆 (AI WINS)";
+                                else message = "🏆 YOU DEFEATED THE RED AI! 🏆 GLORIOUS!";
+                                announceTimer = 999;
+                            }
+                        }
+                    }
+                } else {
+                    attacker.isAttacking = false;
+                    attacker.attackType = null;
+                    attacker.hitActive = false;
+                }
+            }
+            if(defender.invincibleTimer > 0) defender.invincibleTimer--;
+            if(attacker.blockStun > 0) attacker.blockStun--;
+            if(defender.blockStun > 0) defender.blockStun--;
+        }
+        
+        function updateHealthBars() {
+            const p1Percent = (p1.health / p1.maxHealth) * 100;
+            const p2Percent = (p2.health / p2.maxHealth) * 100;
+            document.getElementById('healthP1Fill').style.width = `${Math.max(0,p1Percent)}%`;
+            document.getElementById('healthP2Fill').style.width = `${Math.max(0,p2Percent)}%`;
+            const statusDiv = document.getElementById('gameStatusText');
+            if(gameActive && winner === null) {
+                if(announceTimer > 0) statusDiv.innerText = message;
+                else statusDiv.innerText = "⚔️ FIGHT THE SKILLED RED AI! ⚔️";
+            } else if(winner !== null) {
+                statusDiv.innerText = message;
+            } else {
+                statusDiv.innerText = "🥊 FIGHTING STICK 🥊";
+            }
+            if(announceTimer > 0) announceTimer--;
+        }
+        
+        // input handling (player)
+        const keys = {
+            ArrowLeft: false, ArrowRight: false, ArrowUp: false,
+            KeyZ: false, KeyX: false
+        };
+        
+        window.addEventListener('keydown', (e) => {
+            let code = e.code;
+            if(keys.hasOwnProperty(code)) keys[code] = true;
+            
+            if(gameActive && winner === null) {
+                // Player attacks (blue)
+                if(code === 'KeyZ' && !p2.isAttacking && p2.blockStun <= 0) {
+                    startAttack(p2, p1, 'punch');
+                    e.preventDefault();
+                }
+                if(code === 'KeyX' && !p2.isAttacking && p2.blockStun <= 0) {
+                    startAttack(p2, p1, 'kick');
+                    e.preventDefault();
+                }
+            }
+            if(['ArrowUp','ArrowLeft','ArrowRight','KeyZ','KeyX'].includes(code)) {
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            let code = e.code;
+            if(keys.hasOwnProperty(code)) keys[code] = false;
+        });
+        
+        function resetGame() {
+            p1 = {
+                ...p1,
+                x: 150, y: GROUND_Y - BASE_HEIGHT, health: 100, maxHealth: 100,
+                isAttacking: false, attackTimer: 0, hitActive: false, hitDamage: 0,
+                invincibleTimer: 0, blockStun: 0, velocityY: 0, isGrounded: true,
+                facingRight: true, attackType: null, aiCooldown: 0, aiDecisionDelay: 0
+            };
+            p2 = {
+                ...p2,
+                x: CANVAS_W - 180, y: GROUND_Y - BASE_HEIGHT, health: 100, maxHealth: 100,
+                isAttacking: false, attackTimer: 0, hitActive: false, hitDamage: 0,
+                invincibleTimer: 0, blockStun: 0, velocityY: 0, isGrounded: true,
+                facingRight: false, attackType: null
+            };
+            gameActive = true;
+            winner = null;
+            message = "🤖 RED AI IS READY! PROVE YOUR SKILL! 🤖";
+            announceTimer = 45;
+            updateHealthBars();
+        }
+        
+        // ---------- DRAWING (enhanced) ----------
+        function drawShadowText(ctx, txt, x, y, color) {
+            ctx.fillStyle = "#000000aa";
+            ctx.fillText(txt, x+2, y+2);
+            ctx.fillStyle = color;
+            ctx.fillText(txt, x, y);
+        }
+        
+        function drawFighter(fighter, isAI) {
+            let x = fighter.x;
+            let y = fighter.y;
+            let w = fighter.width;
+            let h = fighter.height;
+            let alpha = 1;
+            if(fighter.invincibleTimer > 0 && (Math.floor(Date.now()/50)%3 ===0)) alpha = 0.6;
+            ctx.save();
+            if(alpha < 1) ctx.globalAlpha = alpha;
+            
+            let gradient = ctx.createLinearGradient(x, y, x+w, y+h);
+            gradient.addColorStop(0, fighter.color);
+            gradient.addColorStop(1, fighter.darkColor);
+            ctx.fillStyle = gradient;
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "black";
+            ctx.fillRect(x, y, w, h);
+            ctx.fillStyle = "#fcd7a0";
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, y-9, 23, 25, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#2f2e2e";
+            ctx.beginPath();
+            ctx.arc(x+w*0.35, y-13, 4.2, 0, Math.PI*2);
+            ctx.arc(x+w*0.65, y-13, 4.2, 0, Math.PI*2);
+            ctx.fill();
+            // headband: AI gets menacing red band
+            ctx.fillStyle = fighter.side === 'left' ? "#ff3a1a" : "#2a6eff";
+            ctx.fillRect(x+5, y-20, w-10, 9);
+            if(isAI && fighter.side === 'left') {
+                ctx.fillStyle = "#ffcc44";
+                ctx.font = "bold 16 monospace";
+                ctx.fillText("AI", x+12, y-22);
+            }
+            // attack VFX
+            if(fighter.isAttacking && fighter.hitActive){
+                ctx.fillStyle = "#ffcc55";
+                ctx.shadowBlur = 12;
+                for(let i=0;i<8;i++){
+                    ctx.beginPath();
+                    ctx.arc(x+w/2 + (Math.sin(Date.now()*0.02+i)*14), y+h/2-12 + (Math.cos(Date.now()*0.03+i)*10), 6, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = "#ff8844";
+                if(fighter.attackType === 'kick') {
+                    ctx.beginPath();
+                    ctx.moveTo(x+w, y+h-25);
+                    ctx.lineTo(x+w+28, y+h-35);
+                    ctx.lineTo(x+w+14, y+h-12);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(x+w+12, y+h/2, 14, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+            ctx.fillStyle = "#00000066";
+            ctx.beginPath();
+            ctx.ellipse(x+w/2, GROUND_Y-4, w/1.6, 8, 0, 0, Math.PI*2);
+            ctx.fill();
+        }
+        
+        function drawStage(){
+            ctx.fillStyle = "#2f241b";
+            ctx.fillRect(0, 0, CANVAS_W, GROUND_Y-12);
+            ctx.fillStyle = "#5d3a1e";
+            ctx.fillRect(0, GROUND_Y-12, CANVAS_W, 16);
+            ctx.fillStyle = "#b57c48";
+            for(let i=0;i<14;i++){
+                ctx.fillRect(35+i*72, GROUND_Y-16, 28, 8);
+            }
+            ctx.font = "bold 20 monospace";
+            ctx.fillStyle = "#ddbb77aa";
+            ctx.fillText("✦ RED AI ARENA ✦", 380, 55);
+            // danger marks
+            ctx.fillStyle = "#ff666622";
+            for(let i=0;i<3;i++) ctx.fillRect(150+i*300, 70, 40, 6);
+        }
+        
+        function drawUIeffects() {
+            if(!gameActive && winner !== null){
+                ctx.font = "800 42 monospace";
+                ctx.shadowBlur = 3;
+                ctx.fillStyle = "#FFD966";
+                let winMsg = winner === 'p1' ? "RED AI VICTORY" : "YOU WIN!";
+                ctx.fillText(winMsg, CANVAS_W/2-ctx.measureText(winMsg).width/2, 110);
+            }
+            if(p1.blockStun>0){
+                ctx.fillStyle = "#ffaa66";
+                ctx.font = "bold 26 monospace";
+                ctx.fillText("⚡", p1.x+15, p1.y-18);
+            }
+            if(p2.blockStun>0){
+                ctx.fillStyle = "#ffaa66";
+                ctx.fillText("⚡", p2.x+15, p2.y-18);
+            }
+        }
+        
+        // main game loop
+        function updateGame() {
+            if(gameActive && winner === null) {
+                // 1. AI DECISION (P1 skilled)
+                updateAIPlayer();
+                
+                // 2. apply physics & movement (AI movement already applied partially but we apply boundaries and gravity again)
+                // For AI: we already moved its x in AI function, but need to apply base movement/bounds/gravity
+                applyMovementAndBounds(p1, false);
+                applyMovementAndBounds(p2, true);
+                
+                // 3. update attacks and collisions
+                updateAttacks();
+                updateHealthBars();
+                
+                // extra defeat check
+                if(p1.health <= 0) { gameActive=false; winner='p2'; message="🎉 YOU BEAT THE SKILLED RED AI! 🎉"; announceTimer=999; }
+                if(p2.health <= 0) { gameActive=false; winner='p1'; message="💀 RED AI DOMINATES... TRY AGAIN! 💀"; announceTimer=999; }
+            }
+            
+            // DRAW EVERYTHING
+            ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+            drawStage();
+            drawFighter(p1, true);
+            drawFighter(p2, false);
+            drawUIeffects();
+            
+            ctx.font = "bold 24 'Courier New'";
+            if(announceTimer>0 && gameActive && winner===null){
+                drawShadowText(ctx, message, CANVAS_W/2 - ctx.measureText(message).width/2, 85, "#ffd799");
+            } else if(gameActive && winner===null){
+                drawShadowText(ctx, ">>> PRESS Z / X TO ATTACK <<<", CANVAS_W/2-210, 85, "#ffbf69");
+            }
+            requestAnimationFrame(updateGame);
+        }
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetGame();
+            updateHealthBars();
+        });
+        
+        resetGame();
+        updateHealthBars();
+        updateGame();
+    })();
+</script>
+</body>
+</html>
